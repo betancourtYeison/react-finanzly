@@ -1,0 +1,42 @@
+import React from "react";
+import { mount, configure } from "enzyme";
+import Adapter from "enzyme-adapter-react-16";
+import { Provider } from "react-redux";
+import { createStore } from "redux";
+import App from "./App";
+
+configure({ adapter: new Adapter() });
+
+describe("App", () => {
+    it("Test store", () => {
+        const preventDefault = jest.fn();
+        const reducer = jest.fn().mockReturnValue({
+            finanzas: [{ desc: 'lala', cant: 150 }]
+        });
+        const store = createStore(reducer);
+        const wrapper = mount(
+            <Provider store={store}>
+                <App/>
+            </Provider>
+        );
+        wrapper.find('input').at(0).simulate('change', { target: { value: 'lele' }});
+        wrapper.find('input').at(1).simulate('change', { target: { value: '200' }});
+        wrapper.find('form').simulate('submit', { preventDefault });
+        wrapper.find('button').at(2).simulate('click');
+        
+        const [a, ...rest] = reducer.mock.calls
+        
+        expect(rest).toEqual([
+            [
+                { finanzas: [{ desc: 'lala', cant: 150 }] }, 
+                { type: 'AGREGAR', payload: { cant: 200, desc: 'lele'} }
+            ],
+            [
+                { finanzas: [{ desc: 'lala', cant: 150 }] }, 
+                { type: 'ELIMINAR', index: 0 }
+            ]
+        ]);
+        expect(wrapper.text().includes('lala')).toEqual(true);
+        expect(wrapper.text().includes('Finanzly')).toEqual(true);
+    });
+});
